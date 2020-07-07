@@ -59,41 +59,20 @@ final class RiskProvider {
 private extension RiskConsumer {
 	func provideRisk(_ risk: Risk) {
 		targetQueue.async { [weak self] in
-			self?.didCalculateRisk?(risk)
-		}
-	}
-	
-	func provideNextExposureDetectionDate(_ date: Date) {
-		targetQueue.async { [weak self] in
-			self?.nextExposureDetectionDateDidChange?(date)
+			self?.didCalculateRisk(risk)
 		}
 	}
 }
 
 extension RiskProvider: RiskProviding {
 	func observeRisk(_ consumer: RiskConsumer) {
-		queue.async {
-			self._observeRisk(consumer)
+		queue.async { [weak self] in
+			self?.consumers.add(consumer)
 		}
 	}
 
-	func nextExposureDetectionDate() -> Date {
-		configuration.nextExposureDetectionDate(
-			lastExposureDetectionDate: store.summary?.date
-		)
-	}
-
-	private func _observeRisk(_ consumer: RiskConsumer) {
-		consumers.add(consumer)
-		consumer.nextExposureDetectionDateDidChange?(self.nextExposureDetectionDate())
-		consumer.manualExposureDetectionStateDidChange?(manualExposureDetectionState)
-	}
-
-	var manualExposureDetectionState: ManualExposureDetectionState {
-		let shouldPerformDetection = configuration.shouldPerformExposureDetection(
-			lastExposureDetectionDate: store.summary?.date
-			) && configuration.detectionMode == .manual
-		return shouldPerformDetection ? .possible : .waiting
+	var manualExposureDetectionState: ManualExposureDetectionState? {
+		configuration.manualExposureDetectionState(lastExposureDetectionDate: store.summary?.date)
 	}
 
 	/// Called by consumers to request the risk level. This method triggers the risk level process.
@@ -155,6 +134,21 @@ extension RiskProvider: RiskProviding {
 		}
 	}
 
+	#if UITESTING
+	private func _requestRiskLevel(userInitiated: Bool, completion: Completion? = nil) {
+		let risk = Risk.mocked
+
+		targetQueue.async {
+			completion?(.mocked)
+		}
+
+		for consumer in consumers.allObjects {
+			_provideRisk(risk, to: consumer)
+		}
+
+		saveRiskIfNeeded(risk)
+	}
+	#else
 	private func _requestRiskLevel(userInitiated: Bool, completion: Completion? = nil) {
 		let group = DispatchGroup()
 
@@ -189,15 +183,14 @@ extension RiskProvider: RiskProviding {
 			return
 		}
 		
-		let tracingHistory = store.tracingStatusHistory
-		let numberOfEnabledHours = tracingHistory.countEnabledHours()
+		let activeTracing = store.tracingStatusHistory.activeTracing()
 
 		guard
 			let risk = RiskCalculation.risk(
 				summary: summaries?.current?.summary,
 				configuration: _appConfiguration,
 				dateLastExposureDetection: summaries?.current?.date,
-				numberOfTracingActiveHours: numberOfEnabledHours,
+				activeTracing: activeTracing,
 				preconditions: exposureManagerState,
 				currentDate: Date(),
 				previousRiskLevel: store.previousRiskLevel,
@@ -212,14 +205,10 @@ extension RiskProvider: RiskProviding {
 			_provideRisk(risk, to: consumer)
 		}
 
-		#if UITESTING
-		completeOnTargetQueue(risk: .mocked)
-		#else
 		completeOnTargetQueue(risk: risk)
-		#endif
-
 		saveRiskIfNeeded(risk)
 	}
+	#endif
 
 	private func _provideRisk(_ risk: Risk, to consumer: RiskConsumer?) {
 		#if UITESTING

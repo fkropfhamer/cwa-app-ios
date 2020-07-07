@@ -191,6 +191,14 @@ enum AppStrings {
 		static let unknown = NSLocalizedString("ExposureSubmissionError_unknown", comment: "")
 		static let defaultError = NSLocalizedString("ExposureSubmissionError_defaultError", comment: "")
 		static let noConfiguration = NSLocalizedString("No Exposure Configuration available", comment: "")
+		static let unsupported = NSLocalizedString("ExposureSubmissionError_unsupported", comment: "")
+		static let `internal` = NSLocalizedString("ExposureSubmissionError_internal", comment: "")
+		static let rateLimited = NSLocalizedString("ExposureSubmissionError_rateLimited", comment: "")
+		static let moreInfo = NSLocalizedString("ExposureSubmissionError_moreInfo", comment: "")
+		static let moreInfoURL = NSLocalizedString("ExposureSubmissionError_moreInfo_URL", comment: "")
+		static let moreInfoURLEN5 = NSLocalizedString("ExposureSubmissionError_moreInfo_URL_EN5", comment: "")
+		static let moreInfoURLEN11 = NSLocalizedString("ExposureSubmissionError_moreInfo_URL_EN11", comment: "")
+		static let moreInfoURLEN13 = NSLocalizedString("ExposureSubmissionError_moreInfo_URL_EN13", comment: "")
 	}
 
 	enum ExposureDetection {
@@ -265,6 +273,7 @@ enum AppStrings {
 		static let resetDescription = NSLocalizedString("Settings_Reset_Description", comment: "")
 
 		static let navigationBarTitle = NSLocalizedString("Settings_NavTitle", comment: "")
+
 	}
 
 	enum NotificationSettings {
@@ -281,6 +290,9 @@ enum AppStrings {
 		static let openSettings = NSLocalizedString("NotificationSettings_Off_OpenSettings", comment: "")
 
 		static let navigationBarTitle = NSLocalizedString("NotificationSettings_NavTitle", comment: "")
+
+		static let onImageDescription = NSLocalizedString("NotificationSettings_onImageDescription", comment: "")
+		static let offImageDescription = NSLocalizedString("NotificationSettings_offImageDescription", comment: "")
 	}
 	
 	enum Onboarding {
@@ -315,6 +327,10 @@ enum AppStrings {
 		static let onboardingInfo_alwaysStayInformedPage_title = NSLocalizedString("OnboardingInfo_alwaysStayInformedPage_title", comment: "")
 		static let onboardingInfo_alwaysStayInformedPage_boldText = NSLocalizedString("OnboardingInfo_alwaysStayInformedPage_boldText", comment: "")
 		static let onboardingInfo_alwaysStayInformedPage_normalText = NSLocalizedString("OnboardingInfo_alwaysStayInformedPage_normalText", comment: "")
+		static let onboardingInfo_alwaysStayInformedPage_stateHeader = NSLocalizedString("OnboardingInfo_enableLoggingOfContactsPage_stateHeader", comment: "")
+		static let onboardingInfo_alwaysStayInformedPage_stateTitle = NSLocalizedString("OnboardingInfo_enableLoggingOfContactsPage_stateTitle", comment: "")
+		static let onboardingInfo_alwaysStayInformedPage_stateActivated = NSLocalizedString("OnboardingInfo_enableLoggingOfContactsPage_stateActive", comment: "")
+		static let onboardingInfo_alwaysStayInformedPage_stateDeactivated = NSLocalizedString("OnboardingInfo_enableLoggingOfContactsPage_stateStopped", comment: "")
 	}
 
 	enum ExposureNotificationSetting {
