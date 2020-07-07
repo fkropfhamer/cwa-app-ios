@@ -41,30 +41,67 @@ class ExposureSubmissionWarnOthersViewControllerTests: XCTestCase {
 		_ = vc.view
 		vc.exposureSubmissionService = service
 
-		let expectTANSubmission = self.expectation(description: "Call getTANForExposureSubmit")
-		let exampleTAN = "asdf123456"
-		service.getTANForExposureSubmitCallback = { hasConsent, completion in
-			if !hasConsent {
-				XCTFail("No consent provided.")
-			}
-
-			expectTANSubmission.fulfill()
-			completion(.success(exampleTAN))
-		}
-
 		let expectSubmitExposure = self.expectation(description: "Call submitExposure")
-		service.submitExposureCallback = { tan, completion in
-			if tan != exampleTAN {
-				XCTFail("TANs do not match.")
-			}
+		service.submitExposureCallback = {  completion in
 
 			expectSubmitExposure.fulfill()
 			completion(nil)
 		}
 
 		// Trigger submission process.
-		vc.didTapButton()
+		vc.startSubmitProcess()
 		waitForExpectations(timeout: .short)
+	}
+
+	func testShowENErrorAlertInternal() {
+		let vc = createVC()
+		_ = vc.view
+
+		let alert = vc.createENAlert(.internal)
+		XCTAssert(alert.actions.count == 2)
+		XCTAssert(alert.actions[1].title == AppStrings.ExposureSubmissionError.moreInfo)
+		XCTAssert(alert.message == AppStrings.ExposureSubmissionError.internal)
+	}
+
+	func testShowENErrorAlertUnsupported() {
+		let vc = createVC()
+		_ = vc.view
+
+		let alert = vc.createENAlert(.unsupported)
+		XCTAssert(alert.actions.count == 2)
+		XCTAssert(alert.actions[1].title == AppStrings.ExposureSubmissionError.moreInfo)
+		XCTAssert(alert.message == AppStrings.ExposureSubmissionError.unsupported)
+	}
+
+	func testShowENErrorAlertRateLimited() {
+		let vc = createVC()
+		_ = vc.view
+
+		let alert = vc.createENAlert(.rateLimited)
+		XCTAssert(alert.actions.count == 2)
+		XCTAssert(alert.actions[1].title == AppStrings.ExposureSubmissionError.moreInfo)
+		XCTAssert(alert.message == AppStrings.ExposureSubmissionError.rateLimited)
+	}
+
+	func testGetURLInternal() {
+		let vc = createVC()
+
+		let url = vc.getURL(for: .internal)
+		XCTAssert(url?.absoluteString == AppStrings.ExposureSubmissionError.moreInfoURLEN11)
+	}
+
+	func testGetURLUnsupported() {
+		let vc = createVC()
+
+		let url = vc.getURL(for: .unsupported)
+		XCTAssert(url?.absoluteString == AppStrings.ExposureSubmissionError.moreInfoURLEN5)
+	}
+
+	func testGetURLRateLimited() {
+		let vc = createVC()
+
+		let url = vc.getURL(for: .rateLimited)
+		XCTAssert(url?.absoluteString == AppStrings.ExposureSubmissionError.moreInfoURLEN13)
 	}
 
 }

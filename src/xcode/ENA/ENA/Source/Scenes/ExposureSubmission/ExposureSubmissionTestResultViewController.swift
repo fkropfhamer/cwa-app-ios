@@ -18,13 +18,12 @@
 import Foundation
 import UIKit
 
-class ExposureSubmissionTestResultViewController: DynamicTableViewController, SpinnerInjectable {
+class ExposureSubmissionTestResultViewController: DynamicTableViewController, ENANavigationControllerWithFooterChild {
 	// MARK: - Attributes.
 
 	var exposureSubmissionService: ExposureSubmissionService?
 	var testResult: TestResult?
 	var timeStamp: Int64?
-	var spinner: UIActivityIndicatorView?
 
 	// MARK: - View Lifecycle methods.
 
@@ -61,15 +60,15 @@ class ExposureSubmissionTestResultViewController: DynamicTableViewController, Sp
 		guard let result = testResult else { return }
 		switch result {
 		case .positive:
-			setButtonTitle(to: AppStrings.ExposureSubmissionResult.continueButton)
-			hideSecondaryButton()
+			navigationFooterItem?.primaryButtonTitle = AppStrings.ExposureSubmissionResult.continueButton
+			navigationFooterItem?.isSecondaryButtonHidden = true
 		case .negative, .invalid:
-			setButtonTitle(to: AppStrings.ExposureSubmissionResult.deleteButton)
-			hideSecondaryButton()
+			navigationFooterItem?.primaryButtonTitle = AppStrings.ExposureSubmissionResult.deleteButton
+			navigationFooterItem?.isSecondaryButtonHidden = true
 		case .pending:
-			setButtonTitle(to: AppStrings.ExposureSubmissionResult.refreshButton)
-			setSecondaryButtonTitle(to: AppStrings.ExposureSubmissionResult.deleteButton)
-			showSecondaryButton()
+			navigationFooterItem?.primaryButtonTitle = AppStrings.ExposureSubmissionResult.refreshButton
+			navigationFooterItem?.secondaryButtonTitle = AppStrings.ExposureSubmissionResult.deleteButton
+			navigationFooterItem?.isSecondaryButtonHidden = false
 		}
 	}
 
@@ -128,14 +127,19 @@ class ExposureSubmissionTestResultViewController: DynamicTableViewController, Sp
 	}
 
 	private func refreshTest() {
-		startSpinner()
+		navigationFooterItem?.isPrimaryButtonEnabled = false
+		navigationFooterItem?.isPrimaryButtonLoading = true
 		exposureSubmissionService?
 			.getTestResult { result in
-				self.stopSpinner()
 				switch result {
 				case let .failure(error):
-					let alert = ExposureSubmissionViewUtils.setupErrorAlert(error)
-					self.present(alert, animated: true, completion: nil)
+
+					let alert = self.setupErrorAlert(message: error.localizedDescription)
+					
+					self.present(alert, animated: true, completion: {
+						self.navigationFooterItem?.isPrimaryButtonEnabled = true
+						self.navigationFooterItem?.isPrimaryButtonLoading = false
+					})
 				case let .success(testResult):
 					self.refreshView(for: testResult)
 				}
@@ -154,7 +158,10 @@ class ExposureSubmissionTestResultViewController: DynamicTableViewController, Sp
 	private func showWarnOthers() {
 		if let state = exposureSubmissionService?.preconditions() {
 			if !state.isGood {
-				let alert = ExposureSubmissionViewUtils.setupErrorAlert(.enNotEnabled)
+
+				let alert = self.setupErrorAlert(
+					message: ExposureSubmissionError.enNotEnabled.localizedDescription
+				)
 				self.present(alert, animated: true, completion: nil)
 				return
 			}
@@ -187,10 +194,10 @@ extension ExposureSubmissionTestResultViewController {
 	}
 }
 
-// MARK: ExposureSubmissionNavigationControllerChild methods.
+// MARK: ENANavigationControllerWithFooterChild methods.
 
-extension ExposureSubmissionTestResultViewController: ExposureSubmissionNavigationControllerChild {
-	func didTapButton() {
+extension ExposureSubmissionTestResultViewController {
+	func navigationController(_ navigationController: ENANavigationControllerWithFooter, didTapPrimaryButton button: UIButton) {
 		guard let result = testResult else { return }
 
 		switch result {
@@ -203,7 +210,7 @@ extension ExposureSubmissionTestResultViewController: ExposureSubmissionNavigati
 		}
 	}
 
-	func didTapSecondButton() {
+	func navigationController(_ navigationController: ENANavigationControllerWithFooter, didTapSecondaryButton button: UIButton) {
 		guard let result = testResult else { return }
 		switch result {
 		case .pending:
@@ -250,7 +257,7 @@ private extension ExposureSubmissionTestResultViewController {
 			separators: false,
 			cells: [
 				.title2(text: AppStrings.ExposureSubmissionResult.procedure,
-						accessibilityIdentifier: "AppStrings.ExposureSubmissionResult.procedure"),
+						accessibilityIdentifier: AccessibilityIdentifiers.ExposureSubmissionResult.procedure),
 
 				ExposureSubmissionDynamicCell.stepCell(
 					title: AppStrings.ExposureSubmissionResult.testAdded,
@@ -287,7 +294,7 @@ private extension ExposureSubmissionTestResultViewController {
 			separators: false,
 			cells: [
 				.title2(text: AppStrings.ExposureSubmissionResult.procedure,
-						accessibilityIdentifier: "AppStrings.ExposureSubmissionResult.procedure"),
+						accessibilityIdentifier: AccessibilityIdentifiers.ExposureSubmissionResult.procedure),
 
 
 				ExposureSubmissionDynamicCell.stepCell(
@@ -312,7 +319,7 @@ private extension ExposureSubmissionTestResultViewController {
 				),
 
 				.title2(text: AppStrings.ExposureSubmissionResult.furtherInfos_Title,
-						accessibilityIdentifier: "AppStrings.ExposureSubmissionResult.furtherInfos_Title"),
+						accessibilityIdentifier: AccessibilityIdentifiers.ExposureSubmissionResult.furtherInfos_Title),
 
 				ExposureSubmissionDynamicCell.stepCell(bulletPoint: AppStrings.ExposureSubmissionResult.furtherInfos_ListItem1),
 				ExposureSubmissionDynamicCell.stepCell(bulletPoint: AppStrings.ExposureSubmissionResult.furtherInfos_ListItem2),
@@ -333,7 +340,7 @@ private extension ExposureSubmissionTestResultViewController {
 			separators: false,
 			cells: [
 				.title2(text: AppStrings.ExposureSubmissionResult.procedure,
-						accessibilityIdentifier: "AppStrings.ExposureSubmissionResult.procedure"),
+						accessibilityIdentifier: AccessibilityIdentifiers.ExposureSubmissionResult.procedure),
 
 				ExposureSubmissionDynamicCell.stepCell(
 					title: AppStrings.ExposureSubmissionResult.testAdded,
@@ -369,7 +376,7 @@ private extension ExposureSubmissionTestResultViewController {
 			),
 			cells: [
 				.title2(text: AppStrings.ExposureSubmissionResult.procedure,
-						accessibilityIdentifier: "AppStrings.ExposureSubmissionResult.procedure"),
+						accessibilityIdentifier: AccessibilityIdentifiers.ExposureSubmissionResult.procedure),
 
 				ExposureSubmissionDynamicCell.stepCell(
 					title: AppStrings.ExposureSubmissionResult.testAdded,
